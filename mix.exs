@@ -34,8 +34,18 @@ defmodule Edeliver.Mixfile do
    ]
 
   defp deps do
+    if project_uses_distillery? do
+      [
+        {:distillery, ">= 0.8.0", warn_missing: false},
+        # {:exrm, ">= 0.16.0", optional: true, warn_missing: false},
+      ]
+    else
+      [
+        {:exrm, ">= 0.16.0", warn_missing: false},
+        # {:distillery, ">= 0.8.0", optional: true, warn_missing: false},
+      ]
+    end ++
     [
-      {:distillery, ">= 0.9.0", warn_missing: false},
       {:meck, "~> 0.8.4", only: :test},
       {:earmark, "~> 0.1", only: :dev},
       {:ex_doc, "~> 0.11.5", only: :dev},
@@ -53,11 +63,28 @@ defmodule Edeliver.Mixfile do
 
   defp elixirc_paths do
 
-    [ Path.join("lib", "distillery"),
+    if project_uses_distillery? do
+      [Path.join("lib", "distillery")]
+    else
+      [Path.join("lib", "exrm")]
+    end ++ [
       Path.join("lib", "edeliver"),
       Path.join("lib", "mix"),
       Path.join("lib", "edeliver.ex"),
     ]
+  end
+
+  defp project_uses_distillery? do
+    try do
+      Mix.Project.get() |> Kernel.apply(:project, []) |> Keyword.get(:deps) |> List.keymember?(:distillery, 0)
+      rescue error ->
+        Mix.Shell.IO.error "Error when detecting whether distillery is used as release build tool: #{inspect error}"
+        false
+      catch signal, error ->
+        Mix.Shell.IO.error "Failed to detect whether distillery is used as release build tool with signal: #{inspect signal} and error: #{inspect error}"
+        false
+    end
+
   end
 
 end
