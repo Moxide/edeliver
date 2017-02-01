@@ -215,7 +215,7 @@ __execute_on_deploy_host() {
 
   ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "
     set -e
-    [ -f ~/.profile ] && source ~/.profile
+    [ -f ~/.profile ] && source ~/.profile; [ -f ~/.bash_profile ] && source ~/.bash_profile
     cd $DELIVER_TO/$APP $SILENCE
     $_command"
 }

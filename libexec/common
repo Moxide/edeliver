@@ -55,7 +55,7 @@ authorize_deploy_hosts_on_release_store() {
     status "Authorizing deploy hosts on release store"
     local _release_store_host=${RELEASE_STORE%:*}
     __sync_remote "
-      [ -f ~/.profile ] && source ~/.profile
+      [ -f ~/.profile ] && source ~/.profile; [ -f ~/.bash_profile ] && source ~/.bash_profile; [ -f ~/.bash_profile ] && source ~/.bash_profile
       set -e
       for _host in $HOSTS_APP_USER
       do
@@ -85,7 +85,7 @@ authorize_release_store_on_build_host() {
     local _release_store_host=${RELEASE_STORE%:*}
     _release_store_host=${_release_store_host#*@}
     __sync_remote "
-      [ -f ~/.profile ] && source ~/.profile
+      [ -f ~/.profile ] && source ~/.profile; [ -f ~/.bash_profile ] && source ~/.bash_profile; [ -f ~/.bash_profile ] && source ~/.bash_profile
       set -e
       if [[ \$(ssh-keygen -F \"$_release_store_host\" | grep -c found) = 0 ]]; then
         echo \"Authorizing $_release_store_host on $HOSTS_APP_USER:\" $SILENCE
