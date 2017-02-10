@@ -7,7 +7,7 @@ _Deployment for Elixir and Erlang_
 [![Hex.pm](http://img.shields.io/hexpm/v/edeliver.svg)](https://hex.pm/packages/edeliver) [![Hex.pm](http://img.shields.io/hexpm/dt/edeliver.svg)](https://hex.pm/packages/edeliver)
 
 
-**edeliver** is based on [deliver](https://github.com/gerhard/deliver) enables you to build and deploy Elixir and Erlang applications and perform hot-code upgrades.
+**edeliver** is based on [deliver](https://github.com/gerhard/deliver) and enables you to build and deploy Elixir and Erlang applications and perform hot-code upgrades.
 
 The [erlang releases](http://www.erlang.org/doc/design_principles/release_handling.html) are built on a *remote* host that is similar to the production machines.  After being built, the release can then be deployed to one or more production machines.
 
@@ -38,11 +38,12 @@ Once built, the [release](http://www.erlang.org/doc/design_principles/release_ha
 
 Assuming an Elixir project, you already have a build server and a staging server, and you've created a database on your staging server already (there is no ecto.create, we skip straight to migrations).
 
-Add edeliver to your project dependencies in mix.exs:
+Add edeliver and your build tool ([distillery](https://github.com/bitwalker/distillery) or [exrm](https://github.com/bitwalker/exrm)) to your project dependencies in mix.exs:
 
 ```exs
 def application, do: [
   applications: [
+  	 ...
     # Add edeliver to the END of the list
     :edeliver
   ]
@@ -51,7 +52,9 @@ def application, do: [
 defp deps do
   [
     ...
-    {:edeliver, "~> 1.3.0"}
+    {:edeliver, "~> 1.4.2"},
+    {:distillery, ">= 0.8.0", warn_missing: false},
+    # or :exrm
   ]
 end
 ```
@@ -108,19 +111,19 @@ mix edeliver migrate
 
 ## Installation
 
-Because it is based on [deliver](https://github.com/gerhard/deliver), is uses only shell scripts and has no further dependencies except the Erlang/Elixir build system.
+Because it is based on [deliver](https://github.com/gerhard/deliver), it uses only shell scripts and has no further dependencies except the Erlang/Elixir build system.
 
 It can be used with any one of these build systems:
 
+  * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [distillery](https://github.com/bitwalker/distillery) for elixir/erlang releases (recommended)
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [exrm](https://github.com/bitwalker/exrm) for elixir/erlang releases
-  * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [distillery](https://github.com/bitwalker/distillery) for elixir/erlang releases
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [relx](https://github.com/erlware/relx) for elixir/erlang releases
   * [rebar](https://github.com/basho/rebar) for pure erlang releases
 
 Edeliver tries to autodetect which system to use:
 
-  * If a `./mix.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [exrm](https://github.com/bitwalker/exrm) is used to generate the releases / upgrades.
   * If a `./mix.exs` and a `rel/config.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [distillery](https://github.com/bitwalker/distillery) is used to generate the releases / upgrades.
+  * If a `./mix.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [exrm](https://github.com/bitwalker/exrm) is used to generate the releases / upgrades.
   * If a `./relx.config` file exists in addition to a `./mix.exs` file, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [relx](https://github.com/erlware/relx) is used to generate the releases / upgrades.
   * Otherwise [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades.
 
@@ -128,7 +131,7 @@ This can be overridden by the config variables `BUILD_CMD=rebar|mix`, `RELEASE_C
 
 Edeliver uses ssh and scp to build and deploy the releases.  It is recommended that you use ssh and scp with key+passphrase only.  You can use `ssh-add` if you don't want to enter your passphrase every time.
 
-It may be required to install and configure git on your build host.  You may also have to clone the repository initially at the `BUILD_AT` path, although edeliver will try to take care of this for you.  [Erlang](http://www.erlang.org/) and [Elixir](http://elixir-lang.org/) must be installed and available on the `BUILD_HOST`.
+It may be required to install and configure git on your build host. You may also have to clone the repository initially at the `BUILD_AT` path, although edeliver will try to take care of this for you. [Erlang](http://www.erlang.org/) and [Elixir](http://elixir-lang.org/) must be installed and available on the `BUILD_HOST`. The default shell for the build and deploy user should be `bash` or `zsh` on your build and deployment systems (check that especially if you are [running FreeBSD](https://www.freebsd.org/doc/en/articles/linux-users/shells.html)).
 
 The build host must be similar to the production/staging hosts.  For example, if you want to deploy to a production system based on Linux, the release must also be built on a Linux system.
 
@@ -137,11 +140,15 @@ The Erlang runtime (OTP) and the Elixir runtime are packaged with the release—
 
 ### Mix considerations
 
-If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add edeliver as [hex package](https://hex.pm/packages/edeliver) to your `mix.exs` config:
+If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add edeliver and your build tool and your build tool ([distillery](https://hex.pm/packages/distillery) or [exrm](https://hex.pm/packages/exrm)) as [hex package](https://hex.pm/packages/edeliver) to your `mix.exs` config:
 
 ```exs
 defp deps do
-  [{:edeliver, ">= 1.3.0"}]
+  [
+  	{:edeliver, ">= 1.4.2"},
+    {:distillery, ">= 0.8.0", warn_missing: false},
+	# or {:exrm, ">= 0.16.0", warn_missing: false},
+  ]
 end
 ```
 
@@ -158,20 +165,13 @@ def application, do: [
 ]
 ```
 
-Before using mix to build the releases, you should install [hex](https://hex.pm) on the build host before the first build (otherwise mix asks interactively to install it).
-
-```console
-mix local.hex
-```
-
-
 ### Rebar considerations
 
-When using rebar, edeliver can be added as [rebar](https://github.com/basho/rebar) depencency. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory):
+When using rebar, edeliver can be added as [rebar](https://github.com/basho/rebar) dependency. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory):
 
     {deps, [
       % ...
-      {edeliver, "1.3.0",
+      {edeliver, "1.4.2",
         {git, "git://github.com/boldpoker/edeliver.git", {branch, master}}}
     ]}.
 
@@ -207,6 +207,16 @@ DELIVER_TO="/opt/my-erlang-app" # deploy directory on production hosts
 
 To use different configurations on different hosts, you can [configure edeliver to link](https://github.com/boldpoker/edeliver/wiki/Use-per-host-configuration) the `vm.args` and/or the `sys.config` files in the release package by setting the `LINK_VM_ARGS=/path/to/vm.args` and/or `LINK_SYS_CONFIG=/path/to/sys.config` variables in the edeliver config if you use [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [exrm](https://github.com/bitwalker/exrm) or [distillery](https://github.com/bitwalker/distillery) to build the releases.
 
+Another strategy is to use runtime environment variable evaluation (available for [exrm](https://github.com/bitwalker/exrm) and [relx](https://github.com/erlware/relx)). For more information on this technique, see [Plataformatec - Deploying Elixir with edeliver](http://blog.plataformatec.com.br/2016/06/deploying-elixir-applications-with-edeliver/)
+
+If you wish to use `RELX_REPLACE_OS_VARS=true`, ensure this is _exported_ in your deployment environment and all the environment variables which should replace default configuration.
+
+For example in `~/.profile`
+
+```sh
+export RELX_REPLACE_OS_VARS=true
+export MY_CUSTOM_DATABASE_PORT=5433
+```
 
 ## Build Commands
 
@@ -262,7 +272,7 @@ The reason for that is, that when the upgrade is build with rebar, rebar tries t
 
     mix edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
 
-Deploy commands deliver the builds that were created with a build command to your staging or prodution hosts.  They can also perform a live code upgrade.  Built releasees or upgrades are available in your local directory `.deliver/releases`.  To deploy releases the following configuration variables must be set:
+Deploy commands deliver the builds that were created with a build command to your staging or production hosts.  They can also perform a live code upgrade.  Built releasees or upgrades are available in your local directory `.deliver/releases`.  To deploy releases the following configuration variables must be set:
 
 - `APP`: the name of your release which should be built
 - `PRODUCTION_HOSTS`: the production hosts to deploy to, separated by space
@@ -374,7 +384,7 @@ mix edeliver deploy release to production
 mix edeliver start production
 ```
 
-Or execute the the above steps with a single command:
+Or execute the above steps with a single command:
 
 ```sh
 mix edeliver update production --branch=feature --start-deploy

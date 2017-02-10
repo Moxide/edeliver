@@ -28,7 +28,7 @@ run() {
   status "Pushing tag"
   confirm "Push tag v${_new_version}?" && git push origin "v${_new_version}"
   status "Publishing to hex.pm"
-  confirm "Publish to hex?" && mix hex.publish
+  confirm "Publish to hex?" && PUBLISHING_TO_HEX_PM='true' mix hex.publish
   status "Creating release on github"
   confirm "Create release on github?" && open "https://github.com/boldpoker/edeliver/releases/new?tag=v${_new_version}"
 }
@@ -67,8 +67,8 @@ update_version() {
   sed -i -e "s/DELIVER_VERSION\s*=\s*\"[^\"]\{1,\}\"/DELIVER_VERSION=\"$_new_version\"/" "${BASE_PATH}/libexec/defaults" # | grep DELIVER_VER
   # ./README.md:56:        {:edeliver, "~> $_current_version"}
   sed -i -e "s/^\([[:space:]]*{:edeliver,[[:space:]]*\"[[:space:]]*~>\)[^\"]\{1,\}\"/\1 $_new_version\"/" "${BASE_PATH}/README.md" # | grep '{:edeliver'
-  # ./README.md:144:        [{:edeliver, ">= $_current_version"}]
-  sed -i -e "s/^\([[:space:]]*\[{:edeliver,[[:space:]]*\"[[:space:]]*>=\)[^\"]\{1,\}\"/\1 $_new_version\"/" "${BASE_PATH}/README.md" # | grep '\[{:edeliver'
+  # ./README.md:144:        {:edeliver, ">= $_current_version"}
+  sed -i -e "s/^\([[:space:]]*{:edeliver,[[:space:]]*\"[[:space:]]*>=\)[^\"]\{1,\}\"/\1 $_new_version\"/" "${BASE_PATH}/README.md" # | grep '\[{:edeliver'
   # README.md:82:      {edeliver, "1.0",
   sed -i -e "s/^\([[:space:]]*{edeliver,[[:space:]]*\"\)[^\"]\{1,\}\"/\1$_new_version\"/" "${BASE_PATH}/README.md" # | grep '{edeliver'
   # mix.exs:7:      version: "1.1.5",
