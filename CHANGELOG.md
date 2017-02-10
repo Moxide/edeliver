@@ -1,6 +1,23 @@
 eDeliver Versions
 =================
 
+__1.4.2__
+
+- Support Elixir 1.3.4 in addition to 1.4
+
+__1.4.1__
+
+- Compatibility with elixir 1.4
+- Compatibility with elixir versions 1.3.[0-3]
+- Improved support for distillery as build tool
+
+__1.4.0__
+
+- Marked `:exrm` as `:optional` dependency. This __requires to add `:exrm`
+  as dependency to the mix file of the project__ if exrm is used as build tool
+- Allow to build releases using [distillery](https://github.com/bitwalker/distillery)
+- Improve detection whether exrm or distillery is used as build tool
+
 __1.3.0__
 
 - Support distillery as release tool
